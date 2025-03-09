@@ -10,8 +10,6 @@ export declare const FILE_EXCHANGE_PROTOCOL = "/universal-connectivity-file/1";
 export declare const DIRECT_MESSAGE_PROTOCOL = "/universal-connectivity/dm/1.0.0";
 export declare const CIRCUIT_RELAY_CODE = 290;
 export declare const MIME_TEXT_PLAIN = "text/plain";
-export declare const WEBTRANSPORT_BOOTSTRAP_PEER_ID = "12D3KooWFhXabKDwALpzqMbto94sB7rvmZ6M28hs9Y9xSopDKwQr";
-export declare const BOOTSTRAP_PEER_IDS: string[];
 export type Libp2pType = Libp2p<{
     pubsub?: PubSub;
     identify: Identify;
@@ -19,4 +17,6 @@ export type Libp2pType = Libp2p<{
     delegatedRouting?: DelegatedRoutingV1HttpApiClient;
 }>;
 export declare function trimAddresses(list: Multiaddr[]): string[];
+export declare function random(len: number, hex?: boolean, leading?: boolean): string;
+export declare function r(max: number): number;
 //# sourceMappingURL=constants.d.ts.map

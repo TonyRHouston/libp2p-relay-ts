@@ -1,4 +1,4 @@
-import { Libp2pType } from "./src/lib/constants";
+import { Libp2pType } from "./src/constants";
 import { Multiaddr } from "@multiformats/multiaddr";
 
 declare module 'ts-relay' {

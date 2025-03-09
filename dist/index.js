@@ -1,4 +1,4 @@
-export * from "./src/lib/constants.js";
-export * from "./src/lib/relay.js";
-export * from "./src/lib/direct-message.js";
+export * from "./src/constants.js";
+export * from "./src/libp2p.js";
+export * from "./src/direct-message.js";
 //# sourceMappingURL=index.js.map

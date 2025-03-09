@@ -8,7 +8,18 @@ import { identify } from '@libp2p/identify'
 import { Libp2pType } from './constants.ts'
 import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from '@libp2p/websockets'
-const key = "01ecc96c7b4a840bebcaa493b75754a2c44f7ccd44f439fdc98f6c63020d8e68";
+import fs from "fs";
+import path from "path";
+
+let key;
+if (fs.existsSync(path.join(process.cwd(), "config.json"))) {
+  const config = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "config.json"), "utf-8")
+  );
+  key = config.key;
+} else {
+  
+}
 
 
 const prvKey = generateKeyPairFromSeed("Ed25519", Buffer.from(key, "hex"));
