@@ -1,4 +1,4 @@
-import { startRelay } from "./libp2p";
+import { startRelay } from "./libp2p.js";
 startRelay().then(() => {
     console.log("Relay started");
 });
