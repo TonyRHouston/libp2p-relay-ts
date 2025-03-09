@@ -10,18 +10,25 @@ import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from '@libp2p/websockets'
 import fs from "fs";
 import path from "path";
+import { random } from './constants.ts'
 
-let key;
-if (fs.existsSync(path.join(process.cwd(), "config.json"))) {
-  const config = JSON.parse(
-    fs.readFileSync(path.join(process.cwd(), "config.json"), "utf-8")
-  );
+
+let key: string;
+const configPath = path.join(process.cwd(), "config.json");
+console.log(configPath);
+
+if (fs.existsSync(configPath)) {
+  const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+  console.log(config);
   key = config.key;
 } else {
-  
+  key = random(64, true, false);
+  console.log(key);
+  fs.writeFileSync(configPath, JSON.stringify({ key }, null, 2));
+  console.log("Key generated and saved to config.json");
 }
 
-
+console.log("Key: ", key);
 const prvKey = generateKeyPairFromSeed("Ed25519", Buffer.from(key, "hex"));
 export async function startRelay(): Promise<Libp2pType> {
   const node = await createLibp2p({

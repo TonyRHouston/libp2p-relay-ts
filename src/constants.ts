@@ -33,18 +33,91 @@ export function trimAddresses(list: Multiaddr[]): string[] {
   return op;
 }
 
-
-export function random (len: number, hex: boolean = false, leading: boolean = false): string {
-  let tmp = '';
-  let chars =  ['a', 'b', 'c', 'd', 'e', 'f', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
-  if(hex && leading)
-  {
-    tmp += '0x'
-  }else {
-  chars = ['g', 'h', 'i', 'j',  'k', 'l', 'm','n', 'o', 'p', 'q', 'r', 's', 't', 'u','v', 'w', 'x','y','z','!' , "@", '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '~', '`', '{', '}', '[', ']', '|', ':', ';', '"', "'", '<', '>', ',', '.', '?', '/', ...chars ];
+export function random(
+  len: number,
+  hex: boolean = false,
+  leading: boolean = false
+): string {
+  let tmp = "";
+  let chars = [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "0",
+  ];
+  if (leading) {
+    tmp += "0x";
+  }
+  if (!hex) {
+    chars = [
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+      "z",
+      "!",
+      "@",
+      "#",
+      "$",
+      "%",
+      "^",
+      "&",
+      "*",
+      "(",
+      ")",
+      "-",
+      "_",
+      "=",
+      "+",
+      "~",
+      "`",
+      "{",
+      "}",
+      "[",
+      "]",
+      "|",
+      ":",
+      ";",
+      '"',
+      "'",
+      "<",
+      ">",
+      ",",
+      ".",
+      "?",
+      "/",
+      ...chars,
+    ];
   }
   for (let x = 0; x < len; x++) {
-      tmp += chars[r(chars.length)]
+    tmp += chars[r(chars.length)];
   }
   return tmp;
 }
