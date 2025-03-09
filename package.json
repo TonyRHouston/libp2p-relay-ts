@@ -1,6 +1,6 @@
 {
   "name": "libp2p-relay-ts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./dist",
   "bin": {
     "ts-relay": "./src"
