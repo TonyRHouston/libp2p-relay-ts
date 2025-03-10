@@ -1,12 +1,3 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var _a, _b;
 import { TypedEventEmitter } from '@libp2p/interface';
 import { DIRECT_MESSAGE_PROTOCOL, MIME_TEXT_PLAIN } from "./constants.js";
@@ -36,19 +27,15 @@ export class DirectMessage extends TypedEventEmitter {
         this.dmPeers = new Set();
         this.components = components;
     }
-    start() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.topologyId = yield this.components.registrar.register(DIRECT_MESSAGE_PROTOCOL, {
-                onConnect: this.handleConnect.bind(this),
-                onDisconnect: this.handleDisconnect.bind(this),
-            });
+    async start() {
+        this.topologyId = await this.components.registrar.register(DIRECT_MESSAGE_PROTOCOL, {
+            onConnect: this.handleConnect.bind(this),
+            onDisconnect: this.handleDisconnect.bind(this),
         });
     }
-    afterStart() {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.components.registrar.handle(DIRECT_MESSAGE_PROTOCOL, (_c) => __awaiter(this, [_c], void 0, function* ({ stream, connection }) {
-                yield this.receive(stream, connection);
-            }));
+    async afterStart() {
+        await this.components.registrar.handle(DIRECT_MESSAGE_PROTOCOL, async ({ stream, connection }) => {
+            await this.receive(stream, connection);
         });
     }
     stop() {
@@ -65,103 +52,99 @@ export class DirectMessage extends TypedEventEmitter {
     isDMPeer(peerId) {
         return this.dmPeers.has(peerId.toString());
     }
-    send(peerId, message) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!message) {
-                throw new Error(ERRORS.EMPTY_MESSAGE);
+    async send(peerId, message) {
+        if (!message) {
+            throw new Error(ERRORS.EMPTY_MESSAGE);
+        }
+        let stream;
+        try {
+            // openConnection will return the current open connection if it already exists, or create a new one
+            const conn = await this.components.connectionManager.openConnection(peerId, { signal: AbortSignal.timeout(5000) });
+            if (!conn) {
+                throw new Error(ERRORS.NO_CONNECTION);
             }
-            let stream;
+            // Single protocols can skip full negotiation
+            const stream = await conn.newStream(DIRECT_MESSAGE_PROTOCOL, {
+                negotiateFully: false,
+            });
+            if (!stream) {
+                throw new Error(ERRORS.NO_STREAM);
+            }
+            const datastream = pbStream(stream);
+            const req = {
+                content: message,
+                type: MIME_TEXT_PLAIN,
+                metadata: {
+                    clientVersion: dmClientVersion,
+                    timestamp: BigInt(Date.now()),
+                },
+            };
+            const signal = AbortSignal.timeout(5000);
+            await datastream.write(req, dm.DirectMessageRequest, { signal });
+            const res = await datastream.read(dm.DirectMessageResponse, { signal });
+            if (!res) {
+                throw new Error(ERRORS.NO_RESPONSE);
+            }
+            if (!res.metadata) {
+                throw new Error(ERRORS.NO_METADATA);
+            }
+            if (res.status !== dm.Status.OK) {
+                throw new Error(ERRORS.STATUS_NOT_OK(res.status));
+            }
+        }
+        catch (e) {
+            stream === null || stream === void 0 ? void 0 : stream.abort(e);
+            throw e;
+        }
+        finally {
             try {
-                // openConnection will return the current open connection if it already exists, or create a new one
-                const conn = yield this.components.connectionManager.openConnection(peerId, { signal: AbortSignal.timeout(5000) });
-                if (!conn) {
-                    throw new Error(ERRORS.NO_CONNECTION);
-                }
-                // Single protocols can skip full negotiation
-                const stream = yield conn.newStream(DIRECT_MESSAGE_PROTOCOL, {
-                    negotiateFully: false,
-                });
-                if (!stream) {
-                    throw new Error(ERRORS.NO_STREAM);
-                }
-                const datastream = pbStream(stream);
-                const req = {
-                    content: message,
-                    type: MIME_TEXT_PLAIN,
-                    metadata: {
-                        clientVersion: dmClientVersion,
-                        timestamp: BigInt(Date.now()),
-                    },
-                };
-                const signal = AbortSignal.timeout(5000);
-                yield datastream.write(req, dm.DirectMessageRequest, { signal });
-                const res = yield datastream.read(dm.DirectMessageResponse, { signal });
-                if (!res) {
-                    throw new Error(ERRORS.NO_RESPONSE);
-                }
-                if (!res.metadata) {
-                    throw new Error(ERRORS.NO_METADATA);
-                }
-                if (res.status !== dm.Status.OK) {
-                    throw new Error(ERRORS.STATUS_NOT_OK(res.status));
-                }
+                await (stream === null || stream === void 0 ? void 0 : stream.close({
+                    signal: AbortSignal.timeout(5000),
+                }));
             }
-            catch (e) {
-                stream === null || stream === void 0 ? void 0 : stream.abort(e);
-                throw e;
+            catch (err) {
+                stream === null || stream === void 0 ? void 0 : stream.abort(err);
+                throw err;
             }
-            finally {
-                try {
-                    yield (stream === null || stream === void 0 ? void 0 : stream.close({
-                        signal: AbortSignal.timeout(5000),
-                    }));
-                }
-                catch (err) {
-                    stream === null || stream === void 0 ? void 0 : stream.abort(err);
-                    throw err;
-                }
-            }
-            return true;
-        });
+        }
+        return true;
     }
-    receive(stream, connection) {
-        return __awaiter(this, void 0, void 0, function* () {
+    async receive(stream, connection) {
+        try {
+            const datastream = pbStream(stream);
+            const signal = AbortSignal.timeout(5000);
+            const req = await datastream.read(dm.DirectMessageRequest, { signal });
+            const res = {
+                status: dm.Status.OK,
+                metadata: {
+                    clientVersion: dmClientVersion,
+                    timestamp: BigInt(Date.now()),
+                },
+            };
+            await datastream.write(res, dm.DirectMessageResponse, { signal });
+            const detail = {
+                content: req.content,
+                type: req.type,
+                stream: stream,
+                connection: connection,
+            };
+            this.dispatchEvent(new CustomEvent(directMessageEvent, { detail }));
+        }
+        catch (e) {
+            stream === null || stream === void 0 ? void 0 : stream.abort(e);
+            throw e;
+        }
+        finally {
             try {
-                const datastream = pbStream(stream);
-                const signal = AbortSignal.timeout(5000);
-                const req = yield datastream.read(dm.DirectMessageRequest, { signal });
-                const res = {
-                    status: dm.Status.OK,
-                    metadata: {
-                        clientVersion: dmClientVersion,
-                        timestamp: BigInt(Date.now()),
-                    },
-                };
-                yield datastream.write(res, dm.DirectMessageResponse, { signal });
-                const detail = {
-                    content: req.content,
-                    type: req.type,
-                    stream: stream,
-                    connection: connection,
-                };
-                this.dispatchEvent(new CustomEvent(directMessageEvent, { detail }));
+                await (stream === null || stream === void 0 ? void 0 : stream.close({
+                    signal: AbortSignal.timeout(5000),
+                }));
             }
-            catch (e) {
-                stream === null || stream === void 0 ? void 0 : stream.abort(e);
-                throw e;
+            catch (err) {
+                stream === null || stream === void 0 ? void 0 : stream.abort(err);
+                throw err;
             }
-            finally {
-                try {
-                    yield (stream === null || stream === void 0 ? void 0 : stream.close({
-                        signal: AbortSignal.timeout(5000),
-                    }));
-                }
-                catch (err) {
-                    stream === null || stream === void 0 ? void 0 : stream.abort(err);
-                    throw err;
-                }
-            }
-        });
+        }
     }
 }
 _a = serviceDependencies, _b = serviceCapabilities;

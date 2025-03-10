@@ -17,6 +17,6 @@ export type Libp2pType = Libp2p<{
     delegatedRouting?: DelegatedRoutingV1HttpApiClient;
 }>;
 export declare function trimAddresses(list: Multiaddr[]): string[];
-export declare function random(len: number, hex?: boolean, leading?: boolean): string;
+export declare function random(len: number): string;
 export declare function r(max: number): number;
 //# sourceMappingURL=constants.d.ts.map

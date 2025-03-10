@@ -15,7 +15,7 @@ export function trimAddresses(list) {
     }
     return op;
 }
-export function random(len, hex = false, leading = false) {
+export function random(len) {
     let tmp = "";
     let chars = [
         "a",
@@ -35,65 +35,6 @@ export function random(len, hex = false, leading = false) {
         "9",
         "0",
     ];
-    if (leading) {
-        tmp += "0x";
-    }
-    if (!hex) {
-        chars = [
-            "g",
-            "h",
-            "i",
-            "j",
-            "k",
-            "l",
-            "m",
-            "n",
-            "o",
-            "p",
-            "q",
-            "r",
-            "s",
-            "t",
-            "u",
-            "v",
-            "w",
-            "x",
-            "y",
-            "z",
-            "!",
-            "@",
-            "#",
-            "$",
-            "%",
-            "^",
-            "&",
-            "*",
-            "(",
-            ")",
-            "-",
-            "_",
-            "=",
-            "+",
-            "~",
-            "`",
-            "{",
-            "}",
-            "[",
-            "]",
-            "|",
-            ":",
-            ";",
-            '"',
-            "'",
-            "<",
-            ">",
-            ",",
-            ".",
-            "?",
-            "/",
-            ...chars,
-        ];
-    }
     for (let x = 0; x < len; x++) {
         tmp += chars[r(chars.length)];
     }

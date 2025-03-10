@@ -1,5 +1,5 @@
 import { PeerId, Stream, Connection, TypedEventEmitter, Startable } from '@libp2p/interface'
-import { DIRECT_MESSAGE_PROTOCOL, MIME_TEXT_PLAIN } from './constants.ts'
+import { DIRECT_MESSAGE_PROTOCOL } from './constants.ts'
 import { serviceCapabilities, serviceDependencies } from '@libp2p/interface'
 import type { ConnectionManager } from '@libp2p/interface-internal'
 import type { Registrar } from '@libp2p/interface-internal'
@@ -111,7 +111,7 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
 
       const req: dm.DirectMessageRequest = {
         content: message,
-        type: MIME_TEXT_PLAIN,
+        type: "text/plain",
         metadata: {
           clientVersion: dmClientVersion,
           timestamp: BigInt(Date.now()),

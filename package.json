@@ -22,6 +22,9 @@
     "@libp2p/identify": "3.0.23",
     "@libp2p/tcp": "10.1.6",
     "@libp2p/websockets": "9.2.3",
+    "eciesjs": "^0.4.14",
+    "elliptic": "^6.6.1",
+    "ethereum-cryptography": "^3.1.0",
     "it-protobuf-stream": "1.1.5",
     "libp2p": "2.7.4",
     "protons-runtime": "5.5.0",
@@ -30,5 +33,7 @@
   "paths": {
     "@/*": "src/*"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/elliptic": "^6.4.18"
+  }
 }
