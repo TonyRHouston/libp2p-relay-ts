@@ -1,5 +1,5 @@
 import type { Multiaddr } from "@multiformats/multiaddr";
-export declare function generateKeys(): Promise<{
+export declare function generateKeys(prvKey?: string): Promise<{
     privateKey: string;
     publicKey: string;
 }>;

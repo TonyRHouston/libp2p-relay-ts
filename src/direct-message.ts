@@ -9,7 +9,7 @@ import { pbStream } from 'it-protobuf-stream'
 export const dmClientVersion = '0.0.1'
 export const directMessageEvent = 'message'
 
-const ERRORS = {
+export const ERRORS = {
   EMPTY_MESSAGE: 'Message cannot be empty',
   NO_CONNECTION: 'Failed to create connection',
   NO_STREAM: 'Failed to create stream',
@@ -84,7 +84,7 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
     return this.dmPeers.has(peerId.toString())
   }
 
-  async send(peerId: PeerId, message: string): Promise<boolean> {
+  async send(peerId: PeerId, message: string, type: string = "text/plain"): Promise<boolean> {
     if (!message) {
       throw new Error(ERRORS.EMPTY_MESSAGE)
     }
@@ -111,7 +111,7 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
 
       const req: dm.DirectMessageRequest = {
         content: message,
-        type: "text/plain",
+        type: type,
         metadata: {
           clientVersion: dmClientVersion,
           timestamp: BigInt(Date.now()),

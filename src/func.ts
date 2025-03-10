@@ -2,16 +2,17 @@ import { encrypt as e, decrypt as d } from "eciesjs";
 import type { Multiaddr } from "@multiformats/multiaddr";
 import pkg from "elliptic";
 const { ec } = pkg;
-
+const _ec = new ec("secp256k1");
 import { keccak256 } from "ethereum-cryptography/keccak";
 import { bytesToHex } from "ethereum-cryptography/utils";
 
-const _ec = new ec("secp256k1");
-export async function generateKeys(): Promise<{
+
+export async function generateKeys(prvKey: string = ''): Promise<{
   privateKey: string;
   publicKey: string;
 }> {
-  const privateKey = random(64);
+
+  const privateKey = prvKey !== '' ? prvKey : random(64);
   console.log("Private Key: ", privateKey);
   const keyPair = _ec.keyFromPrivate(privateKey);
   const publicKey = keyPair.getPublic(false, "hex").slice(2);

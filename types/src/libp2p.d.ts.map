@@ -1,1 +1,1 @@
-{"version":3,"file":"libp2p.d.ts","sourceRoot":"","sources":["../../src/libp2p.ts"],"names":[],"mappings":"AAYA,OAAO,EAA0C,UAAU,EAAE,MAAM,aAAa,CAAC;AAejF,wBAAsB,UAAU,IAAI,OAAO,CAAC,UAAU,CAAC,CAuEtD"}
+{"version":3,"file":"libp2p.d.ts","sourceRoot":"","sources":["../../src/libp2p.ts"],"names":[],"mappings":"AAYA,OAAO,EAAE,UAAU,EAAmC,MAAM,aAAa,CAAC;AAqB1E,wBAAsB,UAAU,IAAI,OAAO,CAAC,UAAU,CAAC,CA0EtD"}

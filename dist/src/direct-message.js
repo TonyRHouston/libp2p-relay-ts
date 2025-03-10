@@ -6,7 +6,7 @@ import { dm } from "./protobuf/direct-message.js";
 import { pbStream } from 'it-protobuf-stream';
 export const dmClientVersion = '0.0.1';
 export const directMessageEvent = 'message';
-const ERRORS = {
+export const ERRORS = {
     EMPTY_MESSAGE: 'Message cannot be empty',
     NO_CONNECTION: 'Failed to create connection',
     NO_STREAM: 'Failed to create stream',

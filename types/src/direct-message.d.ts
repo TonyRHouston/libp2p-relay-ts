@@ -2,8 +2,17 @@ import { PeerId, Stream, Connection, TypedEventEmitter, Startable } from '@libp2
 import { serviceCapabilities, serviceDependencies } from '@libp2p/interface';
 import type { ConnectionManager } from '@libp2p/interface-internal';
 import type { Registrar } from '@libp2p/interface-internal';
+import { dm } from './protobuf/direct-message.ts';
 export declare const dmClientVersion = "0.0.1";
 export declare const directMessageEvent = "message";
+export declare const ERRORS: {
+    EMPTY_MESSAGE: string;
+    NO_CONNECTION: string;
+    NO_STREAM: string;
+    NO_RESPONSE: string;
+    NO_METADATA: string;
+    STATUS_NOT_OK: (status: dm.Status) => string;
+};
 export interface DirectMessageEvent {
     content: string;
     type: string;

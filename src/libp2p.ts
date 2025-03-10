@@ -10,24 +10,32 @@ import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from "@libp2p/websockets";
 import fs from "fs";
 import path from "path";
-import { random, generateKeys, encrypt, decrypt, Libp2pType } from "../index.ts";
-
-let key: string;
+import { Libp2pType, DIRECT_MESSAGE_PROTOCOL, ERRORS } from "../index.ts";
+import { random, generateKeys, encrypt, decrypt } from "./func.ts";
+let prvKey: string;
+let pubKey: string;
 const configPath = path.join(process.cwd(), "config.json");
 
 if (fs.existsSync(configPath)) {
   const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-  key = config.key;
+  prvKey = config.prvKey;
+  pubKey = config.pubKey;
+  console.log("Key loaded from config.json");
 } else {
-  key = random(64);
-  fs.writeFileSync(configPath, JSON.stringify({ key }, null, 2));
-  console.log("Key generated and saved to config.json");
+  prvKey = random(64);
+  pubKey = (await generateKeys(prvKey)).publicKey;
+  fs.writeFileSync(configPath, JSON.stringify({ prvKey, pubKey }));
+  console.log(
+    "Key generated and saved to config.json. PROTECT YOUR PRIVATE KEY (prvKey)!"
+  );
 }
 
-const prvKey = generateKeyPairFromSeed("Ed25519", Buffer.from(key, "hex"));
 export async function startRelay(): Promise<Libp2pType> {
   const node = await createLibp2p({
-    privateKey: await prvKey,
+    privateKey: await generateKeyPairFromSeed(
+      "Ed25519",
+      Buffer.from(prvKey, "hex")
+    ),
     addresses: {
       listen: ["/ip4/0.0.0.0/tcp/9090", "/ip4/0.0.0.0/tcp/9089/ws"],
     },
@@ -109,24 +117,45 @@ async function handleEvents(libp2p: Libp2pType) {
     const { detail } = event;
 
     console.log("Connected to: ", detail);
-    await handshake(libp2p, detail);
+    console.log(await handshake(libp2p, detail));
   });
 
-  libp2p.addEventListener("peer:discovery", async (event) => {
-    const { detail } = event;
+  //Project relay does not seek peers.
+  // libp2p.addEventListener("peer:discovery", async (event) => {
+  //   const { detail } = event;
 
-    console.log("Discovered peer: ", detail);
-    // await handshake(libp2p, detail.id);
-  });
+  //   console.log("Discovered peer: ", detail);
+  //   // await handshake(libp2p, detail.id);
+  // });
+  libp2p.services.directMessage.addEventListener(
+    "message",
+    async (event) => await handleMessaging(event)
+  );
 }
 
 async function handshake(libp2p: Libp2pType, peerId: PeerId): Promise<boolean> {
-  // Enhanced direct message handling
-  libp2p.services.directMessage.addEventListener("message", (event) =>
-    handleMessaging(event)
-  );
-  libp2p.services.directMessage.send(peerId, "hey");
-  return true;
+  const { privateKey, publicKey } = await generateKeys();
+  await libp2p.services.directMessage.send(peerId, publicKey, "handshake");
+  // Wait for a response and print it to the console.
+  const response = await new Promise<string>((resolve, reject) => {
+    const timeout = setTimeout(() => resolve("Handshake timeout"), 6000);
+    let response: string | null = null;
+    libp2p.services.directMessage.addEventListener(
+      "message",
+      function handler(event) {
+        const { detail } = event;
+        if (detail.connection.remotePeer.equals(peerId)) {
+          response = detail.content;
+          console.log("Received handshake response: ", response);
+          libp2p.services.directMessage.removeEventListener("message", handler);
+          clearTimeout(timeout);
+          resolve(detail.content);
+        }
+      }
+    );
+  });
+
+  return response !== "Handshake timeout";
 }
 
 async function handleMessaging(
@@ -148,5 +177,3 @@ async function handleMessaging(
   switch (content) {
   }
 }
-
-
