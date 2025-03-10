@@ -9,8 +9,7 @@ import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from "@libp2p/websockets";
 import fs from "fs";
 import path from "path";
-import { DIRECT_MESSAGE_PROTOCOL, ERRORS } from "../index.js";
-import { random, generateKeys, encrypt, decrypt } from "./func.js";
+import { random, generateKeys, decrypt, trimAddresses } from "./func.js";
 let prvKey;
 let pubKey;
 const configPath = path.join(process.cwd(), "config.json");
@@ -39,6 +38,10 @@ export async function startRelay() {
             relay: circuitRelayServer(),
             identify: identify(),
             directMessage: directMessage(),
+            ClientManager: (components) => {
+                const ClientList = [];
+                return { ClientList: ClientList, ClientMap: new Map() };
+            },
         },
     });
     await node.start();
@@ -101,8 +104,11 @@ async function handleEvents(libp2p) {
     });
     libp2p.addEventListener("peer:connect", async (event) => {
         const { detail } = event;
-        console.log("Connected to: ", detail);
-        await handshake(libp2p, detail);
+        const _handshake = await handshake(libp2p, detail);
+        if (!_handshake)
+            libp2p.getConnections(detail).forEach((connection) => {
+                connection.close();
+            });
     });
     //Project relay does not seek peers.
     // libp2p.addEventListener("peer:discovery", async (event) => {
@@ -114,36 +120,39 @@ async function handleEvents(libp2p) {
 }
 async function handshake(libp2p, peerId) {
     const { privateKey, publicKey } = await generateKeys();
-    await libp2p.services.directMessage.send(peerId, publicKey);
-    // openConnection will return the current open connection if it already exists, or create a new one
-    const conn = libp2p.getConnections(peerId)[0];
-    if (!conn) {
-        throw new Error(ERRORS.NO_CONNECTION);
-    }
-    // Single protocols can skip full negotiation
-    const stream = await conn.newStream(DIRECT_MESSAGE_PROTOCOL, {
-        negotiateFully: false,
-    });
-    if (!stream) {
-        throw new Error(ERRORS.NO_STREAM);
-    }
+    await libp2p.services.directMessage.send(peerId, publicKey, "handshake");
+    // Wait for a response and print it to the console.
     const response = await new Promise((resolve, reject) => {
-        libp2p.services.directMessage.receive(stream, libp2p.getConnections(peerId)[0])
-            .then(resolve)
-            .catch(reject);
+        const timeout = setTimeout(() => resolve(false), 6000);
+        libp2p.services.directMessage.addEventListener("message", async function handler(event) {
+            const { detail } = event;
+            if (detail.type == "handshake-response" &&
+                detail.connection.remotePeer.equals(peerId)) {
+                libp2p.services.directMessage.removeEventListener("message", handler);
+                const json = JSON.parse(await decrypt(privateKey, detail.content));
+                if (json.multiAddrs && json.type) {
+                    const x = libp2p.services.ClientManager.ClientList.length;
+                    libp2p.services.ClientManager.ClientMap.set(detail.connection.remotePeer.toString(), x);
+                    libp2p.services.ClientManager.ClientList.push({
+                        multiAddr: [...trimAddresses(json.multiAddrs)],
+                        type: json.type,
+                        pubKey: publicKey,
+                        prvKey: privateKey,
+                    });
+                    console.log(libp2p.services.ClientManager.ClientList[x]);
+                    clearTimeout(timeout);
+                    resolve(true);
+                }
+            }
+        });
     });
-    // console.log(stream)
-    return true;
+    return response;
 }
 async function handleMessaging(event) {
     const { detail } = event;
     const { connection, content, type } = detail;
     const peerId = connection.remotePeer.toString();
     console.log(`${new Date().toISOString()}📬 Direct Message of type ${type} from ${peerId} at ${connection.remoteAddr} Contents: ${content}`);
-    const { privateKey, publicKey } = await generateKeys();
-    const data = await encrypt(publicKey, "ahahahahah");
-    const decrypted = await decrypt(privateKey, data);
-    console.log(data, " :NEXT: ", decrypted);
     switch (content) {
     }
 }

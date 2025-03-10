@@ -52,7 +52,7 @@ export class DirectMessage extends TypedEventEmitter {
     isDMPeer(peerId) {
         return this.dmPeers.has(peerId.toString());
     }
-    async send(peerId, message) {
+    async send(peerId, message, type = "text/plain") {
         if (!message) {
             throw new Error(ERRORS.EMPTY_MESSAGE);
         }
@@ -73,7 +73,7 @@ export class DirectMessage extends TypedEventEmitter {
             const datastream = pbStream(stream);
             const req = {
                 content: message,
-                type: "text/plain",
+                type: type,
                 metadata: {
                     clientVersion: dmClientVersion,
                     timestamp: BigInt(Date.now()),

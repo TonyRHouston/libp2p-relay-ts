@@ -19,7 +19,7 @@ export async function encrypt(pubKey, _in) {
 }
 export async function decrypt(prvKey, _in) {
     const array = await hexToUint8Array(_in);
-    const decryptedBytes = Buffer.from(d(prvKey, array));
+    const decryptedBytes = new Uint8Array(d(prvKey, array));
     return new TextDecoder().decode(decryptedBytes);
 }
 export async function hexToUint8Array(hexString) {

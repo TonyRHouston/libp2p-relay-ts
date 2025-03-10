@@ -13,4 +13,15 @@ export type Libp2pType = Libp2p<{
     identify: Identify;
     directMessage: DirectMessage;
     delegatedRouting?: DelegatedRoutingV1HttpApiClient;
+    ClientManager: ClientManager;
   }>;
+export type ClientManager =  {
+  ClientMap:  Map<string, number>
+  ClientList:  PeerObject[]
+}
+  export type PeerObject = {
+    multiAddr: string[];
+    type: string;
+    pubKey: string;
+    prvKey: string;
+  };

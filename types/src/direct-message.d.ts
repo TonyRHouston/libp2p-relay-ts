@@ -39,7 +39,7 @@ export declare class DirectMessage extends TypedEventEmitter<DirectMessageEvents
     private handleConnect;
     private handleDisconnect;
     isDMPeer(peerId: PeerId): boolean;
-    send(peerId: PeerId, message: string): Promise<boolean>;
+    send(peerId: PeerId, message: string, type?: string): Promise<boolean>;
     receive(stream: Stream, connection: Connection): Promise<void>;
 }
 export declare function directMessage(): (components: DirectMessageComponents) => DirectMessage;

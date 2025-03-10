@@ -30,7 +30,7 @@ export async function encrypt(pubKey: string, _in: string) {
 
 export async function decrypt(prvKey: string, _in: string) {
   const array = await hexToUint8Array(_in);
-  const decryptedBytes = Buffer.from(d(prvKey, array));
+  const decryptedBytes = new Uint8Array(d(prvKey, array));
   return new TextDecoder().decode(decryptedBytes);
 }
 

@@ -7,7 +7,8 @@
   },
   "scripts": {
     "back": "git add . && git commit -m 'a' && git push",
-    "postinstall": "rm -r ./dist && rm -r ./types && tsc"
+    "postinstall": "rm -r ./dist && rm -r ./types && tsc",
+    "dev": "rm -r ./dist && rm -r ./types && tsc && tsx src/dev.ts"
   },
   "type": "module",
   "license": "MIT",
