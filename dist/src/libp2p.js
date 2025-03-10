@@ -9,7 +9,7 @@ import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from "@libp2p/websockets";
 import fs from "fs";
 import path from "path";
-import { random } from "./constants.js";
+import { random, generateKeys, encrypt, decrypt } from "../index.js";
 let key;
 const configPath = path.join(process.cwd(), "config.json");
 if (fs.existsSync(configPath)) {
@@ -123,42 +123,5 @@ async function handleMessaging(event) {
     console.log(data, " :NEXT: ", decrypted);
     switch (content) {
     }
-}
-import pkg from "elliptic";
-const { ec } = pkg;
-const _ec = new ec("secp256k1");
-export async function generateKeys() {
-    const privateKey = random(32);
-    console.log("Private Key: ", privateKey);
-    const keyPair = _ec.keyFromPrivate(privateKey);
-    const publicKey = keyPair.getPublic(false, "hex").slice(2);
-    return {
-        //Get public key (uncompressed format, without the prefix 04)
-        privateKey,
-        publicKey,
-    };
-}
-import { encrypt as e, decrypt as d } from "eciesjs";
-export async function encrypt(pubKey, _in) {
-    const messageBytes = new TextEncoder().encode(_in);
-    // Encryption
-    return e(pubKey, messageBytes).toString("hex");
-}
-export async function decrypt(prvKey, _in) {
-    const array = await hexToUint8Array(_in);
-    const decryptedBytes = Buffer.from(d(prvKey, array));
-    return new TextDecoder().decode(decryptedBytes);
-}
-export async function hexToUint8Array(hexString) {
-    if (hexString.length % 2 !== 0) {
-        throw new Error("Hex string length must be even");
-    }
-    const byteArray = new Uint8Array(hexString.length / 2);
-    for (let i = 0; i < hexString.length; i += 2) {
-        const hexByte = hexString.substring(i, i + 2);
-        const byte = parseInt(hexByte, 16);
-        byteArray[i / 2] = byte;
-    }
-    return byteArray;
 }
 //# sourceMappingURL=libp2p.js.map

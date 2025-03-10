@@ -1,6 +1,6 @@
 var _a, _b;
 import { TypedEventEmitter } from '@libp2p/interface';
-import { DIRECT_MESSAGE_PROTOCOL, MIME_TEXT_PLAIN } from "./constants.js";
+import { DIRECT_MESSAGE_PROTOCOL } from "./constants.js";
 import { serviceCapabilities, serviceDependencies } from '@libp2p/interface';
 import { dm } from "./protobuf/direct-message.js";
 import { pbStream } from 'it-protobuf-stream';
@@ -73,7 +73,7 @@ export class DirectMessage extends TypedEventEmitter {
             const datastream = pbStream(stream);
             const req = {
                 content: message,
-                type: MIME_TEXT_PLAIN,
+                type: "text/plain",
                 metadata: {
                     clientVersion: dmClientVersion,
                     timestamp: BigInt(Date.now()),
