@@ -40,7 +40,7 @@ export async function startRelay() {
             identify: identify(),
             directMessage: directMessage(),
             ClientManager: clientManager(),
-        },
+        }
     });
     await node.start();
     await node.services.directMessage.start();
