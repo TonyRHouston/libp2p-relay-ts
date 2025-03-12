@@ -1,5 +1,5 @@
 import { createLibp2p } from "libp2p";
-import { PeerId, Stream } from "@libp2p/interface";
+import { PeerId } from "@libp2p/interface";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { tcp } from "@libp2p/tcp";
@@ -10,13 +10,8 @@ import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from "@libp2p/websockets";
 import fs from "fs";
 import path from "path";
-import {
-  Libp2pType,
-  DIRECT_MESSAGE_PROTOCOL,
-  ERRORS,
-  PeerObject, ClientManager
-} from "../index.ts";
-import { random, generateKeys, encrypt, decrypt, trimAddresses } from "./func.ts";
+import { Libp2pType, clientManager } from "../index.ts";
+import { random, generateKeys, decrypt, trimAddresses } from "./func.ts";
 let prvKey: string;
 let pubKey: string;
 
@@ -52,12 +47,8 @@ export async function startRelay(): Promise<Libp2pType> {
       relay: circuitRelayServer(),
       identify: identify(),
       directMessage: directMessage(),
-      ClientManager: (components: any) => {
-        const ClientList: PeerObject[] = [];
-        return { ClientList: ClientList, ClientMap: new Map<string, number>() };
-      },
+      ClientManager: clientManager(),
     },
-
   });
 
   await node.start();
@@ -120,17 +111,20 @@ export async function startRelay(): Promise<Libp2pType> {
 async function handleEvents(libp2p: Libp2pType) {
   libp2p.addEventListener("peer:disconnect", (event) => {
     const { detail } = event;
-
+    console.log(
+      "result from Map removal: ",
+      libp2p.services.ClientManager.remove(detail.toString())
+    );
     console.log("Disconnected from: ", detail);
   });
 
   libp2p.addEventListener("peer:connect", async (event) => {
     const { detail } = event;
-   const _handshake: boolean = await handshake(libp2p, detail)
-   if(!_handshake)
-    libp2p.getConnections(detail).forEach((connection) => {
-      connection.close();
-    })
+    const _handshake: boolean = await handshake(libp2p, detail);
+    if (!_handshake)
+      libp2p.getConnections(detail).forEach((connection) => {
+        connection.close().then().catch();
+      });
   });
 
   //Project relay does not seek peers.
@@ -154,26 +148,29 @@ async function handshake(libp2p: Libp2pType, peerId: PeerId): Promise<boolean> {
     const timeout = setTimeout(() => resolve(false), 6000);
     libp2p.services.directMessage.addEventListener(
       "message",
-     async function handler(event) {
+      async function handler(event) {
         const { detail } = event;
         if (
           detail.type == "handshake-response" &&
           detail.connection.remotePeer.equals(peerId)
         ) {
           libp2p.services.directMessage.removeEventListener("message", handler);
-          const json = JSON.parse(await decrypt(privateKey ,detail.content));
+          const json = JSON.parse(await decrypt(privateKey, detail.content));
           if (json.multiAddrs && json.type) {
-            const x = libp2p.services.ClientManager.ClientList.length;
-            libp2p.services.ClientManager.ClientMap.set(detail.connection.remotePeer.toString(), x);
-            libp2p.services.ClientManager.ClientList.push({
-              multiAddr: [...trimAddresses(json.multiAddrs)],
-              type: json.type,
-              pubKey: publicKey,
-              prvKey: privateKey,
-            });
-            console.log(libp2p.services.ClientManager.ClientList[x]);
+            libp2p.services.ClientManager.add(
+              detail.connection.remotePeer.toString(),
+              {
+                multiAddr: [...trimAddresses(json.multiAddrs)],
+                type: json.type,
+                pubKey: publicKey,
+                prvKey: privateKey,
+              }
+            );
             clearTimeout(timeout);
             resolve(true);
+          } else {
+            clearTimeout(timeout);
+            resolve(false);
           }
         }
       }
@@ -195,6 +192,6 @@ async function handleMessaging(
       connection.remoteAddr
     } Contents: ${content}`
   );
-  switch (content) {
+  switch (type) {
   }
 }

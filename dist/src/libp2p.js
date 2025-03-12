@@ -9,6 +9,7 @@ import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from "@libp2p/websockets";
 import fs from "fs";
 import path from "path";
+import { clientManager } from "../index.js";
 import { random, generateKeys, decrypt, trimAddresses } from "./func.js";
 let prvKey;
 let pubKey;
@@ -38,10 +39,7 @@ export async function startRelay() {
             relay: circuitRelayServer(),
             identify: identify(),
             directMessage: directMessage(),
-            ClientManager: (components) => {
-                const ClientList = [];
-                return { ClientList: ClientList, ClientMap: new Map() };
-            },
+            ClientManager: clientManager(),
         },
     });
     await node.start();
@@ -100,6 +98,7 @@ export async function startRelay() {
 async function handleEvents(libp2p) {
     libp2p.addEventListener("peer:disconnect", (event) => {
         const { detail } = event;
+        console.log("result from Map removal: ", libp2p.services.ClientManager.remove(detail.toString()));
         console.log("Disconnected from: ", detail);
     });
     libp2p.addEventListener("peer:connect", async (event) => {
@@ -107,7 +106,7 @@ async function handleEvents(libp2p) {
         const _handshake = await handshake(libp2p, detail);
         if (!_handshake)
             libp2p.getConnections(detail).forEach((connection) => {
-                connection.close();
+                connection.close().then().catch();
             });
     });
     //Project relay does not seek peers.
@@ -131,17 +130,18 @@ async function handshake(libp2p, peerId) {
                 libp2p.services.directMessage.removeEventListener("message", handler);
                 const json = JSON.parse(await decrypt(privateKey, detail.content));
                 if (json.multiAddrs && json.type) {
-                    const x = libp2p.services.ClientManager.ClientList.length;
-                    libp2p.services.ClientManager.ClientMap.set(detail.connection.remotePeer.toString(), x);
-                    libp2p.services.ClientManager.ClientList.push({
+                    libp2p.services.ClientManager.add(detail.connection.remotePeer.toString(), {
                         multiAddr: [...trimAddresses(json.multiAddrs)],
                         type: json.type,
                         pubKey: publicKey,
                         prvKey: privateKey,
                     });
-                    console.log(libp2p.services.ClientManager.ClientList[x]);
                     clearTimeout(timeout);
                     resolve(true);
+                }
+                else {
+                    clearTimeout(timeout);
+                    resolve(false);
                 }
             }
         });
@@ -153,7 +153,7 @@ async function handleMessaging(event) {
     const { connection, content, type } = detail;
     const peerId = connection.remotePeer.toString();
     console.log(`${new Date().toISOString()}📬 Direct Message of type ${type} from ${peerId} at ${connection.remoteAddr} Contents: ${content}`);
-    switch (content) {
+    switch (type) {
     }
 }
 //# sourceMappingURL=libp2p.js.map
