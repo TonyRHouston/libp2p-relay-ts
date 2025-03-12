@@ -6,7 +6,7 @@
     "ts-relay": "./src"
   },
   "scripts": {
-    "back": "git add . && git commit -m 'a' && git push",
+    "back": "git add . && git commit -m 'a' && git push -f",
     "postinstall": "rm -r ./dist && rm -r ./types && tsc",
     "dev": "rm -r ./dist && rm -r ./types && tsc && tsx src/dev.ts"
   },
