@@ -1,6 +1,12 @@
 import { createLibp2p } from "libp2p";
+import {
+  createDelegatedRoutingV1HttpApiClient,
+  DelegatedRoutingV1HttpApiClient,
+} from '@helia/delegated-routing-v1-http-api-client'
 import { PeerId } from "@libp2p/interface";
 import { Libp2p, PubSub } from "@libp2p/interface";
+import { peerIdFromString } from '@libp2p/peer-id'
+import { Multiaddr } from '@multiformats/multiaddr'
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { tcp } from "@libp2p/tcp";
@@ -10,16 +16,19 @@ import { identify } from "@libp2p/identify";
 import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from "@libp2p/websockets";
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
+import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
+import { bootstrap } from '@libp2p/bootstrap'
+import { ping } from '@libp2p/ping'
+import first from 'it-first'
 import { ipns } from '@helia/ipns'
 import fs from "fs";
 import path from "path";
 import { Libp2pType, clientManager } from "../index.ts";
 import { random, generateKeys, decrypt, trimAddresses } from "./func.ts";
-import { pubsub } from "@helia/ipns/routing";
 let prvKey: string;
 let pubKey: string;
 
-const configPath = path.join(process.cwd(), "config.json");
+const configPath = path.join(process.cwd(), "libp2prelay.config.json");
 
 if (fs.existsSync(configPath)) {
   const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
@@ -36,6 +45,8 @@ if (fs.existsSync(configPath)) {
 }
 
 export async function startRelay(): Promise<Libp2pType> {
+  const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
+  const relayListenAddrs = await getRelayListenAddrs(delegatedClient)
   const node = await createLibp2p({
     privateKey: await generateKeyPairFromSeed(
       "Ed25519",
@@ -47,12 +58,23 @@ export async function startRelay(): Promise<Libp2pType> {
     transports: [tcp(), webSockets()],
     streamMuxers: [yamux()],
     connectionEncrypters: [noise()],
+    peerDiscovery: [
+      pubsubPeerDiscovery({
+        interval: 10_000,
+        listenOnly: true,
+        topics: ['universal-connectivity-browser-peer-discovery'],
+      }),
+      bootstrap({
+        list: ['/ip4/127.0.0.1/tcp/9089/ws/p2p/12D3KooWDq819c3UoichS1LfGuxrT5hNNTFKLv3hDxFvm9ZnuzFz'],
+      }),
+    ],
     services: {
       relay: circuitRelayServer(),
       identify: identify(),
       directMessage: directMessage(),
       ClientManager: clientManager(),
       pubsub: gossipsub(),
+      ping: ping(),
     }
   });
 
@@ -149,7 +171,7 @@ async function handshake(libp2p: Libp2pType, peerId: PeerId): Promise<boolean> {
   const { privateKey, publicKey } = await generateKeys();
   await libp2p.services.directMessage.send(peerId, publicKey, "handshake");
   // Wait for a response and print it to the console.
-  const response = await new Promise<boolean>((resolve, reject) => {
+  const response = await new Promise<boolean>((resolve) => {
     const timeout = setTimeout(() => resolve(false), 6000);
     libp2p.services.directMessage.addEventListener(
       "message",
@@ -199,4 +221,28 @@ async function handleMessaging(
   );
   switch (type) {
   }
+}
+
+
+const getRelayListenAddr = (maddr: Multiaddr, peer: PeerId): string =>
+  `${maddr.toString()}/p2p/${peer.toString()}/p2p-circuit`
+async function getRelayListenAddrs(client: DelegatedRoutingV1HttpApiClient): Promise<string[]> {
+  const BOOTSTRAP_PEER_IDS = [
+    '12D3KooWFhXabKDwALpzqMbto94sB7rvmZ6M28hs9Y9xSopDKwQr',
+  ]
+  const peers = await Promise.all(BOOTSTRAP_PEER_IDS.map((peerId) => first(client.getPeers(peerIdFromString(peerId)))))
+
+  const relayListenAddrs = []
+  for (const p of peers) {
+    if (p && p.Addrs.length > 0) {
+      for (const maddr of p.Addrs) {
+        const protos = maddr.protoNames()
+        if (protos.includes('tls') && protos.includes('ws')) {
+          if (maddr.nodeAddress().address === '127.0.0.1') continue
+          relayListenAddrs.push(getRelayListenAddr(maddr, p.ID))
+        }
+      }
+    }
+  }
+  return relayListenAddrs
 }

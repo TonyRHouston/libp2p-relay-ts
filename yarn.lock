@@ -400,6 +400,17 @@
     "@multiformats/mafmt" "^12.1.6"
     "@multiformats/multiaddr" "^12.3.3"
 
+"@libp2p/bootstrap@^11.0.31":
+  version "11.0.31"
+  resolved "https://registry.yarnpkg.com/@libp2p/bootstrap/-/bootstrap-11.0.31.tgz#b9ebd4cb0704055a57a57449d1531e07e5cfb3f0"
+  integrity sha512-kJniyByoGrVArogL0+TGg+riFFj+uTj8+WWFYxUq+JVmKvv4QZCPwJ2GQExIdvqBU+NCeIRNO+kgKkIV/Yuu/w==
+  dependencies:
+    "@libp2p/interface" "^2.7.0"
+    "@libp2p/interface-internal" "^2.3.8"
+    "@libp2p/peer-id" "^5.1.0"
+    "@multiformats/mafmt" "^12.1.6"
+    "@multiformats/multiaddr" "^12.3.3"
+
 "@libp2p/circuit-relay-v2@3.2.4", "@libp2p/circuit-relay-v2@^3.1.10":
   version "3.2.4"
   resolved "https://registry.npmjs.org/@libp2p/circuit-relay-v2/-/circuit-relay-v2-3.2.4.tgz"
@@ -740,6 +751,20 @@
     "@multiformats/multiaddr" "^12.3.3"
     it-byte-stream "^1.1.0"
     uint8arrays "^5.1.0"
+
+"@libp2p/pubsub-peer-discovery@^11.0.1":
+  version "11.0.1"
+  resolved "https://registry.yarnpkg.com/@libp2p/pubsub-peer-discovery/-/pubsub-peer-discovery-11.0.1.tgz#c2bc29248852a2a47edaf00d2a80c03fabf49932"
+  integrity sha512-bT7UO7tQ4mZCPFE0eS8Fx19B8MGzxjbTNR6SwcLGcOqOqUTvc2CLByMvcy3iMXuKjmds6G+VUf5ZMhvjGLTznA==
+  dependencies:
+    "@libp2p/crypto" "^5.0.0"
+    "@libp2p/interface" "^2.0.0"
+    "@libp2p/interface-internal" "^2.0.0"
+    "@libp2p/peer-id" "^5.0.0"
+    "@multiformats/multiaddr" "^12.0.0"
+    protons-runtime "^5.0.0"
+    uint8arraylist "^2.4.3"
+    uint8arrays "^5.0.2"
 
 "@libp2p/pubsub@^10.0.0":
   version "10.1.7"
@@ -2387,7 +2412,7 @@ progress-events@^1.0.0, progress-events@^1.0.1:
   resolved "https://registry.npmjs.org/progress-events/-/progress-events-1.0.1.tgz"
   integrity sha512-MOzLIwhpt64KIVN64h1MwdKWiyKFNc/S6BoYKPIVUHFg0/eIEyBulhWCgn678v/4c0ri3FdGuzXymNCv02MUIw==
 
-protons-runtime@5.5.0, protons-runtime@^5.4.0, protons-runtime@^5.5.0:
+protons-runtime@5.5.0, protons-runtime@^5.0.0, protons-runtime@^5.4.0, protons-runtime@^5.5.0:
   version "5.5.0"
   resolved "https://registry.npmjs.org/protons-runtime/-/protons-runtime-5.5.0.tgz"
   integrity sha512-EsALjF9QsrEk6gbCx3lmfHxVN0ah7nG3cY7GySD4xf4g8cr7g543zB88Foh897Sr1RQJ9yDCUsoT1i1H/cVUFA==
