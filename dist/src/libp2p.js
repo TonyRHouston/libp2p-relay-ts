@@ -7,6 +7,7 @@ import { directMessage } from "./direct-message.js";
 import { identify } from "@libp2p/identify";
 import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from "@libp2p/websockets";
+import { gossipsub } from '@chainsafe/libp2p-gossipsub';
 import fs from "fs";
 import path from "path";
 import { clientManager } from "../index.js";
@@ -40,6 +41,7 @@ export async function startRelay() {
             identify: identify(),
             directMessage: directMessage(),
             ClientManager: clientManager(),
+            pubsub: gossipsub(),
         }
     });
     await node.start();

@@ -9,10 +9,13 @@ import { directMessage, DirectMessageEvent } from "./direct-message.ts";
 import { identify } from "@libp2p/identify";
 import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import { webSockets } from "@libp2p/websockets";
+import { gossipsub } from '@chainsafe/libp2p-gossipsub'
+import { ipns } from '@helia/ipns'
 import fs from "fs";
 import path from "path";
 import { Libp2pType, clientManager } from "../index.ts";
 import { random, generateKeys, decrypt, trimAddresses } from "./func.ts";
+import { pubsub } from "@helia/ipns/routing";
 let prvKey: string;
 let pubKey: string;
 
@@ -49,6 +52,7 @@ export async function startRelay(): Promise<Libp2pType> {
       identify: identify(),
       directMessage: directMessage(),
       ClientManager: clientManager(),
+      pubsub: gossipsub(),
     }
   });
 
