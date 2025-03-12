@@ -5,7 +5,6 @@ import type { DelegatedRoutingV1HttpApiClient } from "@helia/delegated-routing-v
 import { ClientManager } from "./ClientManager.ts";
 
 export type Libp2pType = Libp2p<{
-  pubsub?: PubSub;
   identify: Identify;
   directMessage: DirectMessage;
   delegatedRouting?: DelegatedRoutingV1HttpApiClient;

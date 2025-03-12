@@ -1,5 +1,6 @@
 import { createLibp2p } from "libp2p";
 import { PeerId } from "@libp2p/interface";
+import { Libp2p, PubSub } from "@libp2p/interface";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { tcp } from "@libp2p/tcp";
@@ -48,7 +49,7 @@ export async function startRelay(): Promise<Libp2pType> {
       identify: identify(),
       directMessage: directMessage(),
       ClientManager: clientManager(),
-    },
+    }
   });
 
   await node.start();
